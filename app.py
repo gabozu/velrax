@@ -71,3 +71,6 @@ if uploaded_file:
 
 else:
     st.info("Por favor carga el archivo de configuración para iniciar.")
+
+if st.button("Generar Reporte PDF Profesional"):
+    st.info("🚀 Funcionalidad disponible próximamente en la versión Pro.")
