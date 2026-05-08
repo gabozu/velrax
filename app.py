@@ -13,7 +13,8 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 st.title("🛡️ Velrax | Network Audit Professional")
-st.caption(f"Desplegado para: Proyecto Diplomado Innovación | velrax.com")
+st.markdown("---")
+st.caption("Velrax NetAudit v1.0 | Infraestructura de red segura y optimizada. | © 2026 Velrax Tech | Medellín, Colombia")
 
 uploaded_file = st.file_uploader("Cargar configuración de Switch/Router (.txt)", type=['txt'])
 
