@@ -65,10 +65,6 @@ if uploaded_file:
         st.markdown("### Configuración Detectada")
         with st.expander("Ver código fuente analizado"):
             st.code(content, language="bash")
-
-    # Botón para descargar el reporte (Simulado para el entregable)
-    st.button("Generar Reporte PDF Profesional")
-
 else:
     st.info("Por favor carga el archivo de configuración para iniciar.")
 
