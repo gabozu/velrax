@@ -1,0 +1,97 @@
+/interface bridge
+add name=LAN
+/interface ethernet
+set [ find default-name=ether1 ] l2mtu=2026 mtu=2000
+/interface wireless security-profiles
+set [ find default=yes ] supplicant-identity=MikroTik
+/ip pool
+add name=dhcp_pool0 ranges=192.168.10.2-192.168.10.254
+/ip dhcp-server
+add address-pool=dhcp_pool0 disabled=no interface=LAN name=dhcp1
+/snmp community
+set [ find default=yes ] addresses=0.0.0.0/0 disabled=yes
+add addresses=::/0 name=name_community
+/system logging action
+add disk-file-count=5 disk-file-name=account_local_disk.log name=accountlocaldisk target=disk
+add disk-file-count=5 disk-file-name=backup_local_disk.log name=backuplocaldisk target=disk
+add disk-file-count=5 disk-file-name=dns_local_disk.log name=dnslocaldisk target=disk
+add disk-file-count=5 disk-file-name=dhcp_local_disk.log name=dhcplocaldisk target=disk
+add disk-file-count=5 disk-file-name=firewall_local_disk.log name=firewalllocaldisk target=disk
+add disk-file-count=5 disk-file-name=interface_local_disk name=interfacelocaldisk target=disk
+add disk-file-count=5 disk-file-name=ntp_local_disk.log name=ntplocaldisk target=disk
+add disk-file-count=5 disk-file-name=radius_local_disk.log name=radiuslocaldisk target=disk
+add disk-file-count=5 disk-file-name=script_local_disk.log name=scriptlocaldisk target=disk
+add disk-file-count=5 disk-file-name=system_local_disk.log name=systemlocaldisk target=disk
+add disk-file-count=5 disk-file-name=timer_local_disk.log name=timerlocaldisk target=disk
+add disk-file-count=5 disk-file-name=ssh_local_disk.log name=sshlocaldisk target=disk
+/user group
+add name=read-bussiness policy=local,telnet,ssh,read,test,winbox,password,sniff,api,romon,!ftp,!reboot,!write,!policy,!web,!sensitive,!dude,!tikapp
+add name=operations-bussiness policy=local,telnet,ssh,reboot,read,write,test,winbox,password,sniff,api,romon,!ftp,!policy,!web,!sensitive,!dude,!tikapp
+add name=noc-bussiness policy=local,telnet,ssh,reboot,read,write,test,winbox,sniff,api,romon,!ftp,!policy,!password,!web,!sensitive,!dude,!tikapp
+add name=bussiness-admin policy=local,telnet,ssh,ftp,reboot,read,write,policy,test,winbox,password,web,sniff,sensitive,api,romon,tikapp,!dude
+/interface bridge port
+add bridge=LAN disabled=yes interface=ether5
+add bridge=LAN interface=ether4
+add bridge=LAN interface=ether3
+add bridge=LAN interface=ether2
+/ip address
+add address=public_ip/29 interface=ether1
+add address=192.168.10.1/24 interface=LAN network=192.168.10.0
+/ip dhcp-server network
+add address=192.168.10.0/24 dns-server=206.84.80.244,8.8.8.8 gateway=192.168.10.1
+/ip firewall address-list
+add address=ip/16 list=MGMT
+add address=ip comment=PUBLIC_VPN list=MGMT
+add address=ip/24 comment=VPN_DCGW list=MGMT
+add address=ip/24 comment=RADIUS_LBAL list=MGMT
+add address=ip/24 comment=RADIUS_LBAL list=MGMT
+add address=ip/16 comment="ACCESO WANS" list=MGMT
+/ip firewall filter
+add action=accept chain=input comment=MGMT src-address-list=MGMT
+add action=accept chain=input comment="Allow ICMP" protocol=icmp
+add action=accept chain=input comment="Allow LDP/MPLS" port=646 protocol=tcp
+add action=accept chain=input comment="Allow LDP/MPLS" port=646 protocol=udp
+add action=accept chain=input comment="Allow VRRP" protocol=vrrp
+add action=accept chain=input comment="Allow SNMP" port=161 protocol=udp src-address-list=MGMT
+add action=accept chain=input comment="Allow DHCP BootP" port=67,68 protocol=udp
+add action=accept chain=input comment="Allow MNDP" port=5678 protocol=udp
+add action=accept chain=input comment="Allow UNDP" port=10001,10002 protocol=udp
+add action=accept chain=input comment="Allow NTP" dst-port=123 protocol=udp
+add action=drop chain=input comment="Drop everything else"
+/ip firewall nat
+add action=masquerade chain=srcnat out-interface=ether1
+/ip service
+set winbox port=7092
+/radius
+add address=ip_server comment=name_server secret=pass_key service=login src-address=address timeout=60ms
+add address=ip_server_backup comment=name_server_backup secret=pass_key service=login src-address=address timeout=120ms
+/radius incoming
+set accept=yes
+/snmp
+set contact=correo@correo.com enabled=yes location=sw_nat trap-community=name_community trap-generators=interfaces trap-interfaces=all trap-version=3
+/system clock
+set time-zone-name=America/Bogota
+/system identity
+set name=sw_nat
+/system logging
+set 0 topics=info,!account,!backup,!dns,!dhcp,!ssh,!firewall,!interface,!ntp,!ospf,!radius,!script,!system,!timer
+set 1 topics=error,!account,!backup,!dns,!dhcp,!ssh,!firewall,!interface,!ntp,!ospf,!radius,!script,!system,!timer
+set 2 topics=warning,!backup,!account,!bfd,!bgp,!dns,!dhcp,!ssh,!firewall,!interface,!ntp,!ospf,!radius,!script,!system,!timer
+set 3 action=memory topics=critical,!account,!backup,!dns,!dhcp,!ssh,!firewall,!interface,!ntp,!radius,!script,!system,!timer
+add action=echo topics=critical
+add action=accountlocaldisk prefix=account_ topics=account,!raw,!debug
+add action=backuplocaldisk prefix=backup_ topics=backup,!debug,!raw
+add action=dnslocaldisk prefix=dns_ topics=dns,!debug,!raw,!packet
+add action=dhcplocaldisk prefix=dhcp_ topics=dhcp,!raw,!debug
+add action=firewalllocaldisk prefix=firewall_ topics=firewall,!debug,!raw
+add action=interfacelocaldisk prefix=interface_ topics=interface,bridge,!raw,!debug
+add action=ntplocaldisk prefix=ntp_ topics=ntp,!debug,!raw
+add action=radiuslocaldisk prefix=radius_ topics=radius,!debug,!raw
+add action=scriptlocaldisk prefix=script_ topics=script,!debug,!raw
+add action=systemlocaldisk prefix=system_ topics=system,!raw,!debug,!account
+add action=timerlocaldisk prefix=timer_ topics=timer,!debug,!raw
+add action=sshlocaldisk prefix=ssh_ topics=ssh,!debug,!raw
+/system note
+set show-at-login=no
+/user aaa
+set default-group=read-bussiness use-radius=yes
